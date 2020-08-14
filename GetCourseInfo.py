@@ -1,21 +1,26 @@
 from time import sleep
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
-        
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 from selenium.webdriver.common.by import By
 import json
 from builtins import set
+
+#read course urls from json file
 with open('course.json','r') as fp:
     cUrls = json.load(fp)
 print("Read Course Urls Finished!")
 
 driver = webdriver.Chrome()
+
+#course information list
 courses_list = []
-old_cUrls = []
+# old_cUrls = []
+#error course urls
 errorUrls = []
+
 for cUrl in cUrls:
     print('Course Url:',cUrl)
     driver.get(cUrl)
@@ -27,12 +32,12 @@ for cUrl in cUrls:
     category = driver.find_element_by_class_name('breadcrumb_item.sub-category').text
 #     print(category)
    
-    #开课时间
+    #学期开课信息
     term_info = []
-
-    
+    #开课时间
     term_time = driver.find_element_by_class_name('course-enroll-info_course-info_term-info_term-time').text
 #     print(term_time)
+    #学时安排
     term_workload = driver.find_element_by_class_name('course-enroll-info_course-info_term-workload').text
 #     print(term_workload)
     term_info.append({term_time, term_workload})
@@ -42,11 +47,13 @@ for cUrl in cUrls:
     #当前学期
     term_selected = 2
     
+    #选择不同的学期，获取开课信息
     try:
         while True:
             term_select = driver.find_element_by_class_name('ux-dropdown.course-enroll-info_course-info_term-select_dropdown')
             term_select.click()
             term = driver.find_elements_by_class_name('f-thide.th-fs0fc5')
+            #开课次数  更新
             term_number = len(term)
             next_term = term_number - term_selected
             try:
@@ -55,8 +62,10 @@ for cUrl in cUrls:
                 errorUrls.append(cUrl)
                 break
             time.sleep(2)
+            #开课时间
             term_time = driver.find_element_by_class_name('course-enroll-info_course-info_term-info_term-time').text
 #             print(term_time)
+            #学时安排
             term_workload = driver.find_element_by_class_name('course-enroll-info_course-info_term-workload').text
 #             print(term_workload)
             term_info.append({term_time, term_workload}) 
@@ -66,7 +75,8 @@ for cUrl in cUrls:
     except NoSuchElementException:
         term_number = 1
     print('term number:',term_number)
-    #学校名称
+    
+    #课程所属学校名称
     university = driver.find_element_by_class_name('u-img').get_attribute('alt')
     
     #授课教师信息：姓名 职称
@@ -76,17 +86,8 @@ for cUrl in cUrls:
         teacher_info = tea.text
         teachers_list.append(teacher_info.split())
 
-    #课程团队建议
+    #简介-课程团队
     course_intro = driver.find_element_by_class_name('course-heading-intro_intro').text
-#     print(course_intro)
-#     #课程概述
-#     course_overview = driver.find_element_by_class_name('f-richEditorText').find_elements_by_tag_name('span')
-#     course_overview_text = ''
-#     for paragraph in course_overview:
-#         course_overview_text = course_overview_text + paragraph.text
-# #     print(course_overview_text)
-#     #课程大纲
-#     course_outline = driver.find_element_by_class_name('outline').text
     #课程概述、授课目标、课程大纲、参考资料、证书要求
     course_overview = driver.find_elements_by_class_name('category-content.j-cover-overflow')
     course_overview_text = []
@@ -137,17 +138,13 @@ for cUrl in cUrls:
             continue
     
     courses_list.append({'course name':name, 'university': university, 'category':category, 'teachers': teachers_list, 'term number':term_number, 'term_info':term_info, 'course introduction':course_intro, 'course overview':course_overview_text, 'review number': review_num, 'overall score':review_score, 'comments':course_comments, 'url':cUrl}) 
-    old_cUrls.append(cUrl)
+#     old_cUrls.append(cUrl)
     
-with open('oldcUrls.json','w') as fp:
-    json.dump(old_cUrls, fp = fp, skipkeys = True, ensure_ascii = False, indent = 4)
+# with open('oldcUrls.json','w') as fp:
+#     json.dump(old_cUrls, fp = fp, skipkeys = True, ensure_ascii = False, indent = 4)
     
 with open('errorCourseUrls.json','w') as fp:
     json.dump(errorUrls, fp = fp, skipkeys = True, ensure_ascii = False, indent = 4)
 
 with open('courseInformation.json','w') as fp:
     json.dump(courses_list, fp = fp, skipkeys = True, ensure_ascii = False, indent = 4)
-
-     
-        
-    
