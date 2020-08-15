@@ -1,6 +1,7 @@
 from time import sleep
 from selenium.common.exceptions import NoSuchElementException
 from selenium.common.exceptions import ElementNotInteractableException
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
@@ -16,7 +17,7 @@ print("Read Course Urls Finished!")
 driver = webdriver.Chrome()
 
 #course information list
-courses_list = []
+# courses_list = []
 # old_cUrls = []
 #error course urls
 errorUrls = []
@@ -41,7 +42,7 @@ for cUrl in cUrls:
     term_workload = driver.find_element_by_class_name('course-enroll-info_course-info_term-workload').text
 #     print(term_workload)
     term_info.append({term_time, term_workload})
-     #开课次数
+    #开课次数
     term_number = 1
     
     #当前学期
@@ -112,23 +113,31 @@ for cUrl in cUrls:
         comments = driver.find_elements_by_class_name('ux-mooc-comment-course-comment_comment-list_item')
         for comment in comments:
             #学员姓名
-            user_name = comment.find_element_by_class_name('primary-link.ux-mooc-comment-course-comment_comment-list_item_body_user-info_name').text
-            #学员评分
-            star = len(comment.find_element_by_class_name('star-point').find_elements_by_tag_name('i'))
-            #学员评语
-            comment_text = comment.find_element_by_class_name('ux-mooc-comment-course-comment_comment-list_item_body_content').text
-            #发表日期
-            comment_date = comment.find_element_by_class_name('ux-mooc-comment-course-comment_comment-list_item_body_comment-info_time').text
-            #所在学期
-            term_signed = comment.find_element_by_class_name('ux-mooc-comment-course-comment_comment-list_item_body_comment-info_term-sign').text
-            #评论点赞数
-            comment_vote = comment.find_element_by_class_name('ux-mooc-comment-course-comment_comment-list_item_body_comment-info_actions_vote').text
+            #stale element reference: element is not attached to the page document
+            staleElement = True
+            while staleElement:
+                try:
+                    user_name = comment.find_element_by_class_name('primary-link.ux-mooc-comment-course-comment_comment-list_item_body_user-info_name').text
+                    #学员评分
+                    star = len(comment.find_element_by_class_name('star-point').find_elements_by_tag_name('i'))
+                    #学员评语
+                    comment_text = comment.find_element_by_class_name('ux-mooc-comment-course-comment_comment-list_item_body_content').text
+                    #发表日期
+                    comment_date = comment.find_element_by_class_name('ux-mooc-comment-course-comment_comment-list_item_body_comment-info_time').text
+                    #所在学期
+                    term_signed = comment.find_element_by_class_name('ux-mooc-comment-course-comment_comment-list_item_body_comment-info_term-sign').text
+                    #评论点赞数
+                    comment_vote = comment.find_element_by_class_name('ux-mooc-comment-course-comment_comment-list_item_body_comment-info_actions_vote').text
+                    staleElement = False
+                except StaleElementReferenceException:
+                    staleElement = True
             course_comments.append({'user_name':user_name,'star':star,'content':comment_text,'date':comment_date,'term':term_signed,'vote':comment_vote})
         #翻页
         try:
             page = driver.find_element_by_class_name('ux-pager_btn.ux-pager_btn__next')
-            page.click()
-            time.sleep(2)
+            #ElementClickInterceptedException: Message: element click intercepted
+            driver.execute_script("arguments[0].click();", page)
+            time.sleep(3)
         except NoSuchElementException:
             break
         try:
@@ -137,7 +146,9 @@ for cUrl in cUrls:
         except NoSuchElementException:
             continue
     
-    courses_list.append({'course name':name, 'university': university, 'category':category, 'teachers': teachers_list, 'term number':term_number, 'term_info':term_info, 'course introduction':course_intro, 'course overview':course_overview_text, 'review number': review_num, 'overall score':review_score, 'comments':course_comments, 'url':cUrl}) 
+    course = list({'course name':name, 'university': university, 'category':category, 'teachers': teachers_list, 'term number':term_number, 'term_info':term_info, 'course introduction':course_intro, 'course overview':course_overview_text, 'review number': review_num, 'overall score':review_score, 'comments':course_comments, 'url':cUrl}) 
+    with open('courseInformation.json','a') as fp:
+        json.dump(course, fp = fp, skipkeys = True, ensure_ascii = False, indent = 4)
 #     old_cUrls.append(cUrl)
     
 # with open('oldcUrls.json','w') as fp:
@@ -146,5 +157,5 @@ for cUrl in cUrls:
 with open('errorCourseUrls.json','w') as fp:
     json.dump(errorUrls, fp = fp, skipkeys = True, ensure_ascii = False, indent = 4)
 
-with open('courseInformation.json','w') as fp:
-    json.dump(courses_list, fp = fp, skipkeys = True, ensure_ascii = False, indent = 4)
+# with open('courseInformation.json','w') as fp:
+#     json.dump(courses_list, fp = fp, skipkeys = True, ensure_ascii = False, indent = 4)
