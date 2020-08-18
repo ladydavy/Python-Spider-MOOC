@@ -8,8 +8,9 @@ import time
 from selenium.webdriver.common.by import By
 import json
 import csv
-from builtins import set
 
+from builtins import set
+# import codecs
 #read course urls from json file
 with open('course.json','r') as fp:
     cUrls = json.load(fp)
@@ -22,11 +23,11 @@ driver = webdriver.Chrome()
 # old_cUrls = []
 #error course urls
 errorUrls = []
-with open('courseInformation.csv','a',newline = '') as fp:
-    writer = csv.writer(fp)
-    writer.writerow(['课程名称', '开设高校', '所属类别', '教师', '开课次数', '学期信息', '课程简介', '课程概述等', '课程评价数', '课程平均评分', '学生评价', '课程链接'])
+with open('courseInformation.txt','a') as fp:
+#     fp.write(codecs.BOM_UTF8)
+#     writer.writerow(['课程名称', '开设高校', '所属类别', '教师', '开课次数', '学期信息', '课程简介', '课程概述等', '课程评价数', '课程平均评分', '学生评价', '课程链接'])
     for cUrl in cUrls:
-        print('Course Url:',cUrl)
+        print(cUrl)
         driver.get(cUrl)
         time.sleep(2)
         #课程名称
@@ -164,11 +165,22 @@ with open('courseInformation.csv','a',newline = '') as fp:
                 continue
 #         print(course_comments)
     #     course = {'course name':name, 'university': university, 'category':category, 'teachers': teachers_list, 'term number':term_number, 'term_info':term_info, 'course introduction':course_intro, 'course overview':course_overview_text, 'review number': review_num, 'overall score':review_score, 'comments':course_comments, 'url':cUrl} 
-        course = [name, university, category, teachers_list, term_number, term_info, course_intro, course_overview_text, review_num, review_score, course_comments, cUrl] 
-    
-#         print(course)
-
-        writer.writerow(course)
+#         course = [name, university, category, teachers_list, term_number, term_info, course_intro, course_overview_text, review_num, review_score, course_comments, cUrl] 
+        print('课程名称:', name, file = fp)
+        print('开设高校:', university, file = fp)
+        print('所属类别:', category, file = fp)
+        print('教师:', teachers_list, file = fp)
+        print('开课次数:', term_number, file = fp)
+        print('学期信息:', term_info, file = fp)
+        print('课程简介:', course_intro, file = fp)
+        print('课程概述等:', course_overview_text, file = fp)
+        print('课程评价数:', review_num, file = fp)
+        print('课程平均评分:', review_score, file = fp)
+        print('学生评价:', course_comments, file = fp)
+        print('课程链接:', cUrl, file = fp)
+                
+#         print(course, file = fp)
+#         fp.write(course)
 #         json.dump(course, fp = fp, skipkeys = True, ensure_ascii = False, indent = 4)
 #     old_cUrls.append(cUrl)
     
