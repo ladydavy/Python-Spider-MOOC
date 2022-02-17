@@ -1,0 +1,4 @@
+Install python package <Selenium>
+Check the version of Chrome through Settings -> About Chrome
+Download the according Chrome Driver on https://chromedriver.chromium.org/downloads
+Upzip Chrome driver and put *.exe file in the root of python
